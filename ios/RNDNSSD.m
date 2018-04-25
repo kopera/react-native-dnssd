@@ -29,7 +29,6 @@ RCT_EXPORT_MODULE()
 {
   return @[
            @"serviceFound",
-           @"serviceResolved",
            @"serviceLost",
            ];
 }
@@ -107,16 +106,7 @@ RCT_EXPORT_METHOD(stopSearch)
   if (service == nil) {
     return;
   }
-  
-  if (_hasListeners) {
-    [self sendEventWithName: @"serviceFound"
-                       body: @{
-                               @"name": service.name,
-                               @"type": service.type,
-                               @"domain": service.domain,
-                               }];
-  }
-  
+
   _services[service.name] = service;
   service.delegate = self;
   [service resolveWithTimeout:0.0];
@@ -137,11 +127,7 @@ RCT_EXPORT_METHOD(stopSearch)
 
   if (_hasListeners) {
     [self sendEventWithName: @"serviceLost"
-                       body: @{
-                               @"name": service.name,
-                               @"type": service.type,
-                               @"domain": service.domain,
-                               }];
+                       body: [self serviceToJson:service]];
   }
 }
 
@@ -177,7 +163,7 @@ RCT_EXPORT_METHOD(stopSearch)
 - (void) netServiceDidResolveAddress:(NSNetService *)service
 {
   if (_hasListeners) {
-    [self sendEventWithName: @"serviceResolved"
+    [self sendEventWithName: @"serviceFound"
                        body: [self serviceToJson:service]];
   }
 }

@@ -21,23 +21,17 @@ export default class App extends Component {
   componentDidMount() {
     this.serviceFoundSub = DNSSD.addEventListener("serviceFound", (service) => {
       console.log("Service Found", service);
+      const existing = this.state.services.find((s) => s.name === service.name);
       this.setState({
-        services: [...this.state.services, service],
+        services: existing
+          ? this.state.services.map((s) => s.name === service.name ? service : s)
+          : [...this.state.services, service],
       });
     });
     this.serviceLostSub = DNSSD.addEventListener("serviceLost", (service) => {
       console.log("Service Lost", service);
       this.setState({
         services: this.state.services.filter((s) => s.name !== service.name),
-      });
-    });
-    this.serviceResolvedSub = DNSSD.addEventListener("serviceResolved", (service) => {
-      console.log("Service Resolved", service);
-      this.setState({
-        services: this.state.services.map((s) =>
-          s.name === service.name
-            ? service
-            : s),
       });
     });
     DNSSD.startSearch("airplay", "tcp");
