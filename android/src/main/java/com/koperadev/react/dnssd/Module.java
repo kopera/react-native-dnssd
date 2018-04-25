@@ -2,6 +2,7 @@
 package com.koperadev.react.dnssd;
 
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -18,7 +19,7 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import com.github.druk.rxdnssd.BonjourService;
 import com.github.druk.rxdnssd.RxDnssd;
-import com.github.druk.rxdnssd.RxDnssdBindable;
+// import com.github.druk.rxdnssd.RxDnssdBindable;
 import com.github.druk.rxdnssd.RxDnssdEmbedded;
 
 import rx.Subscription;
@@ -38,12 +39,12 @@ public class Module extends ReactContextBaseJavaModule {
     super(reactContext);
 
     this.reactContext = reactContext;
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN
-        || (Build.VERSION.RELEASE.contains("4.4.2") && Build.MANUFACTURER.toLowerCase().contains("samsung"))) {
-      dnssd = new RxDnssdEmbedded();
-    } else {
-      dnssd = new RxDnssdBindable(reactContext);
-    }
+    // if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN
+        // || (Build.VERSION.RELEASE.contains("4.4.2") && Build.MANUFACTURER.toLowerCase().contains("samsung"))) {
+    dnssd = new RxDnssdEmbedded();
+    // } else {
+      // dnssd = new RxDnssdBindable(reactContext);
+    // }
     searches = new ArrayList<>();
   }
 
@@ -68,6 +69,7 @@ public class Module extends ReactContextBaseJavaModule {
       .compose(dnssd.queryRecords())
       .subscribeOn(Schedulers.io())
       .observeOn(AndroidSchedulers.mainThread())
+      .debounce(5000, TimeUnit.MILLISECONDS)
       .subscribe(new Action1<BonjourService>() {
         @Override
           public void call(BonjourService bonjourService) {
