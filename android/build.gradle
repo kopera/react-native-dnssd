@@ -33,5 +33,5 @@ repositories {
 
 dependencies {
     compile 'com.facebook.react:react-native:+'
-    compile 'com.github.andriydruk:dnssd:0.9.7'
+    compile 'com.github.andriydruk:dnssd:0.9.5'
 }

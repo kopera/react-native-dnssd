@@ -1,7 +1,11 @@
 
 package com.koperadev.react.dnssd;
 
+import java.util.ArrayList;
+import java.util.Map;
 import javax.annotation.Nullable;
+
+import android.util.Log;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
@@ -16,20 +20,22 @@ import com.github.druk.dnssd.DNSSDEmbedded;
 import com.github.druk.dnssd.DNSSDException;
 import com.github.druk.dnssd.DNSSDService;
 
-import java.util.ArrayList;
-import java.util.Map;
 
 public class Module extends ReactContextBaseJavaModule {
   private final ReactContext reactContext;
   private final DNSSD dnssd;
   private final ArrayList<DNSSDService> searches;
+  private final ArrayList<DNSSDService> resolutions;
+
+  public static final String TAG = "RNDNSSD";
 
   public Module(ReactApplicationContext reactContext) {
     super(reactContext);
 
     this.reactContext = reactContext;
-    dnssd = new DNSSDEmbedded();
+    dnssd = new DNSSDEmbedded(60000);
     searches = new ArrayList<>();
+    resolutions = new ArrayList<>();
   }
 
   @Override
@@ -45,18 +51,24 @@ public class Module extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void startSearch(String type, String protocol, String domain) {
-    String serviceType = String.format("_%s._%s.", type, protocol);
+    String serviceType = String.format("_%s._%s", type, protocol);
 
+    Log.d(TAG, "Search starting for " + serviceType + " in domain: " + domain);
     try {
       DNSSDService search = dnssd.browse(0, 0, serviceType, domain, new BrowseListener());
+      Log.d(TAG, "Search started for " + serviceType + " in domain: " + domain);
       searches.add(search);
     } catch (DNSSDException e) {
-      // Log.e("TAG", "error: " + errorCode);
+      Log.e(TAG, "Search start error: " + e, e);
     }
   }
 
   @ReactMethod
   public void stopSearch() {
+    Log.d(TAG, "Stop all searches");
+    for (DNSSDService resolution: resolutions) {
+      resolution.stop();
+    }
     for (DNSSDService search: searches) {
       search.stop();
     }
@@ -72,33 +84,45 @@ public class Module extends ReactContextBaseJavaModule {
   private class BrowseListener implements com.github.druk.dnssd.BrowseListener {
     @Override
     public void serviceFound(DNSSDService search, int flags, int ifIndex, final String serviceName, String regType, String domain) {
-      WritableMap service = new WritableNativeMap();
-      service.putString("name", serviceName);
-      service.putString("type", regType);
-      service.putString("domain", domain);
-
-      sendEvent("serviceFound", service);
-
       try {
-        dnssd.resolve(0, 0, serviceName, regType, domain, new ResolveListener(serviceName, regType, domain));
+        String serviceId = dnssd.constructFullName(serviceName, regType, domain);
+        Log.d(TAG, "Service Found: " + serviceId);
+
+        WritableMap service = new WritableNativeMap();
+        service.putString("name", serviceName);
+        service.putString("type", regType);
+        service.putString("domain", domain);
+
+        sendEvent("serviceFound", service);
+
+        DNSSDService resolution = dnssd.resolve(0, 0, serviceName, regType, domain, new ResolveListener(serviceName, regType, domain));
+        resolutions.add(resolution);
       } catch (DNSSDException e) {
-        // Log.e("TAG", "error: " + errorCode);
+        Log.e(TAG, "Resolve start error: " + e, e);
       }
     }
 
     @Override
     public void serviceLost(DNSSDService search, int flags, int ifIndex, String serviceName, String regType, String domain) {
-      WritableMap service = new WritableNativeMap();
-      service.putString("name", serviceName);
-      service.putString("type", regType);
-      service.putString("domain", domain);
+      try {
+        String serviceId = dnssd.constructFullName(serviceName, regType, domain);
+        Log.d(TAG, "Service Lost: " + serviceId);
 
-      sendEvent("serviceLost", service);
+        WritableMap service = new WritableNativeMap();
+        service.putString("id", serviceId);
+        service.putString("name", serviceName);
+        service.putString("type", regType);
+        service.putString("domain", domain);
+
+        sendEvent("serviceLost", service);
+      } catch (DNSSDException e) {
+        Log.e(TAG, "Service lost error: " + e, e);
+      }
     }
 
     @Override
     public void operationFailed(DNSSDService search, int errorCode) {
-      // Log.e("TAG", "error: " + errorCode);
+      Log.e(TAG, "Browse error: " + errorCode);
     }
   }
 
@@ -108,7 +132,6 @@ public class Module extends ReactContextBaseJavaModule {
     private final String domain;
 
     public ResolveListener(String serviceName, String regType, String domain) {
-
       this.serviceName = serviceName;
       this.regType = regType;
       this.domain = domain;
@@ -116,7 +139,10 @@ public class Module extends ReactContextBaseJavaModule {
 
     @Override
     public void serviceResolved(DNSSDService resolver, int flags, int ifIndex, String fullName, String hostName, int port, Map<String, String> txtRecord) {
+      Log.d(TAG, "Service Resolved: " + fullName);
+
       WritableMap service = new WritableNativeMap();
+      service.putString("id", fullName);
       service.putString("name", serviceName);
       service.putString("type", regType);
       service.putString("domain", domain);
@@ -130,11 +156,13 @@ public class Module extends ReactContextBaseJavaModule {
       service.putMap("txt", txt);
 
       sendEvent("serviceResolved", service);
+      resolver.stop();
     }
 
     @Override
     public void operationFailed(DNSSDService resolver, int errorCode) {
-
+      Log.e(TAG, "Resolve error: " + errorCode);
+      resolver.stop();
     }
   }
 }

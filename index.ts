@@ -20,7 +20,7 @@ export namespace DNSSD {
     return EventEmitter.addListener(event, listener);
   }
 
-  export function startSearch(type: string, protocol: string = "tcp", domain: string = "local."): void {
+  export function startSearch(type: string, protocol: string = "tcp", domain: string = ""): void {
     return Implementation.startSearch(type, protocol, domain);
   }
 

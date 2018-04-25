@@ -1,0 +1,5 @@
+rootProject.name = 'example'
+include ':react-native-dnssd'
+project(':react-native-dnssd').projectDir = new File(rootProject.projectDir, '../../android')
+
+include ':app'
