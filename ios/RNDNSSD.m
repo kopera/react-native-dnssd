@@ -127,7 +127,11 @@ RCT_EXPORT_METHOD(stopSearch)
 
   if (_hasListeners) {
     [self sendEventWithName: @"serviceLost"
-                       body: [self serviceToJson:service]];
+                       body: @{
+                               @"name": service.name,
+                               @"type": service.type,
+                               @"domain": service.domain,
+                               }];
   }
 }
 
