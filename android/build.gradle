@@ -33,5 +33,8 @@ repositories {
 
 dependencies {
     compile 'com.facebook.react:react-native:+'
+
+    compile 'com.github.andriydruk:rxdnssd:0.9.5'
     compile 'com.github.andriydruk:dnssd:0.9.5'
+    compile 'io.reactivex:rxandroid:1.2.1'
 }
