@@ -80,7 +80,7 @@ public class Module extends ReactContextBaseJavaModule {
       sendEvent("serviceFound", service);
 
       try {
-        dnssd.resolve(0, 0, serviceName, regType, domain, new ResolveListener());
+        dnssd.resolve(0, 0, serviceName, regType, domain, new ResolveListener(serviceName, regType, domain));
       } catch (DNSSDException e) {
         // Log.e("TAG", "error: " + errorCode);
       }
