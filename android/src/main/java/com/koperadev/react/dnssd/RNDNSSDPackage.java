@@ -11,10 +11,10 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.uimanager.ViewManager;
 import com.facebook.react.bridge.JavaScriptModule;
 
-public class Package implements ReactPackage {
+public class RNDNSSDPackage implements ReactPackage {
     @Override
     public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
-      return Arrays.<NativeModule>asList(new Module(reactContext));
+      return Arrays.<NativeModule>asList(new RNDNSSDModule(reactContext));
     }
 
     // Deprecated from RN 0.47

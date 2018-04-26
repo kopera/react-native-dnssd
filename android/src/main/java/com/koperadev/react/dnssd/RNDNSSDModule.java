@@ -31,13 +31,13 @@ import de.mannodermaus.rxbonjour.platforms.android.AndroidPlatform;
 import de.mannodermaus.rxbonjour.RxBonjour;
 
 
-public class Module extends ReactContextBaseJavaModule {
+public class RNDNSSDModule extends ReactContextBaseJavaModule {
   private final RxBonjour dnssd;
   private final ArrayList<Disposable> searches;
 
   public static final String TAG = "RNDNSSD";
 
-  public Module(ReactApplicationContext reactContext) {
+  public RNDNSSDModule(ReactApplicationContext reactContext) {
     super(reactContext);
 
     dnssd = new RxBonjour.Builder()
