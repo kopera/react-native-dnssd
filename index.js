@@ -7,8 +7,8 @@ export var DNSSD;
         return EventEmitter.addListener(event, listener);
     }
     DNSSD.addEventListener = addEventListener;
-    function startSearch(type, protocol = "tcp", domain = "") {
-        return Implementation.startSearch(type, protocol, domain);
+    function startSearch(type, protocol = "tcp") {
+        return Implementation.startSearch(type, protocol);
     }
     DNSSD.startSearch = startSearch;
     function stopSearch() {

@@ -59,10 +59,10 @@ public class Module extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void startSearch(String type, String protocol, String domain) {
+  public void startSearch(String type, String protocol) {
     String serviceType = String.format("_%s._%s", type, protocol);
 
-    Log.d(TAG, "Search starting for " + serviceType + " in domain: " + domain);
+    Log.d(TAG, "Search starting for " + serviceType + " in domain: local.");
     Disposable search = dnssd.newDiscovery(serviceType)
       .subscribeOn(Schedulers.io())
       .observeOn(AndroidSchedulers.mainThread())

@@ -6,7 +6,7 @@ export declare namespace DNSSD {
     }
     function addEventListener(event: "serviceFound", listener: ServiceFound): Subscription;
     function addEventListener(event: "serviceLost", listener: ServiceLost): Subscription;
-    function startSearch(type: string, protocol?: string, domain?: string): void;
+    function startSearch(type: string, protocol?: string): void;
     function stopSearch(): void;
 }
 /** Types */

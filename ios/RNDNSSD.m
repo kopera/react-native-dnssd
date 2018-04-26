@@ -50,7 +50,7 @@ RCT_EXPORT_MODULE()
 
 #pragma mark - Public API
 
-RCT_EXPORT_METHOD(startSearch:(NSString *)type protocol:(NSString *)protocol domain:(NSString *)domain)
+RCT_EXPORT_METHOD(startSearch:(NSString *)type protocol:(NSString *)protocol)
 {
   if (!_browser) {
     _browser = [[NSNetServiceBrowser alloc] init];
@@ -59,7 +59,7 @@ RCT_EXPORT_METHOD(startSearch:(NSString *)type protocol:(NSString *)protocol dom
     _services = [[NSMutableDictionary alloc] init];
   }
   
-  [_browser searchForServicesOfType:[NSString stringWithFormat:@"_%@._%@.", type, protocol] inDomain:domain];
+  [_browser searchForServicesOfType:[NSString stringWithFormat:@"_%@._%@.", type, protocol] inDomain:@"local."];
 }
 
 RCT_EXPORT_METHOD(stopSearch)

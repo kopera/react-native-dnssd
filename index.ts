@@ -18,8 +18,8 @@ export namespace DNSSD {
     return EventEmitter.addListener(event, listener);
   }
 
-  export function startSearch(type: string, protocol: string = "tcp", domain: string = ""): void {
-    return Implementation.startSearch(type, protocol, domain);
+  export function startSearch(type: string, protocol: string = "tcp"): void {
+    return Implementation.startSearch(type, protocol);
   }
 
   export function stopSearch(): void {
