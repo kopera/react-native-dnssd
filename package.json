@@ -8,10 +8,19 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "react-native"
+    "react-native",
+    "zeroconf",
+    "bonjour",
+    "avahi",
+    "ios",
+    "android"
   ],
   "author": "Ali Sabil",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/kopera/react-native-dnssd.git"
+  },
   "peerDependencies": {
     "react-native": "^0.41.2"
   }
