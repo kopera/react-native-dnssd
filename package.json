@@ -1,6 +1,6 @@
 {
   "name": "react-native-dnssd",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "",
   "main": "index.js",
   "types": "index.d.ts",
@@ -10,8 +10,8 @@
   "keywords": [
     "react-native"
   ],
-  "author": "",
-  "license": "",
+  "author": "Ali Sabil",
+  "license": "MIT",
   "peerDependencies": {
     "react-native": "^0.41.2"
   }
