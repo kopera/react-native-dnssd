@@ -75,7 +75,7 @@ public class RNDNSSDModule extends ReactContextBaseJavaModule {
 
             WritableMap service = new WritableNativeMap();
             service.putString("name", bonjourService.getName());
-            service.putString("type", bonjourService.getType());
+            service.putString("type", bonjourService.getType().replaceAll("\\.local\\.$", "."));
             service.putString("domain", "local.");
             if (host != null) {
               service.putString("hostName", host.getHostAddress());

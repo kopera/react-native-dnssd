@@ -66,6 +66,9 @@ RCT_EXPORT_METHOD(stopSearch)
 {
   if (_browser) {
     [_browser stop];
+    for (id name in _services) {
+      [[_services objectForKey:name] stop];
+    }
     [_services removeAllObjects];
   }
 }
@@ -91,7 +94,7 @@ RCT_EXPORT_METHOD(stopSearch)
   for (NSString *key in txtDict) {
     txt[key] = [[NSString alloc]
                 initWithData:txtDict[key]
-                encoding:NSASCIIStringEncoding];
+                encoding:NSUTF8StringEncoding];
   }
   
   return [NSDictionary dictionaryWithDictionary:txt];
@@ -106,7 +109,7 @@ RCT_EXPORT_METHOD(stopSearch)
   if (service == nil) {
     return;
   }
-
+  
   _services[service.name] = service;
   service.delegate = self;
   [service resolveWithTimeout:0.0];
@@ -120,73 +123,31 @@ RCT_EXPORT_METHOD(stopSearch)
     return;
   }
 
-  if (_services[service.name]) {
+  NSString *name = service.name;
+  if (_services[name]) {
+    NSNetService *service = _services[name];
     [_services removeObjectForKey:service.name];
     [service stop];
+    
+    if (_hasListeners && service.hostName != nil) {
+      [self sendEventWithName: @"serviceLost"
+                         body: [self serviceToJson:service]];
+    }
   }
-
-  if (_hasListeners) {
-    [self sendEventWithName: @"serviceLost"
-                       body: @{
-                               @"name": service.name,
-                               @"type": service.type,
-                               @"domain": service.domain,
-                               }];
-  }
-}
-
-- (void) netServiceBrowser:(NSNetServiceBrowser *)browser
-              didNotSearch:(NSDictionary *)errorDict
-{
-//  if (_hasListeners) {
-//    [self sendEventWithName: @"didNotSearch"
-//                       body: @{
-//                               @"error": errorDict
-//                               }];
-//  }
-}
-
-- (void) netServiceBrowserDidStopSearch:(NSNetServiceBrowser *)browser
-{
-//  if (_hasListeners) {
-//    [self sendEventWithName: @"didStopSearch"
-//                       body: @{}];
-//  }
-}
-
-- (void) netServiceBrowserWillSearch:(NSNetServiceBrowser *)browser
-{
-//  if (_hasListeners) {
-//    [self sendEventWithName: @"willSearch"
-//                       body: @{}];
-//  }
 }
 
 #pragma mark - NSNetServiceDelegate
 
 - (void) netServiceDidResolveAddress:(NSNetService *)service
 {
-  if (_hasListeners) {
-    [self sendEventWithName: @"serviceFound"
-                       body: [self serviceToJson:service]];
-  }
-}
+  if (_services[service.name]) {
+    _services[service.name] = service;
 
-- (void) netService:(NSNetService *)service
-      didNotResolve:(NSDictionary *)errorDict
-{
-//  if (_hasListeners) {
-//    [self sendEventWithName: @"didNotResolveService"
-//                       body: @{
-//                               @"service": [RNDNSSD serviceToJson:service],
-//                               @"error": errorDict
-//                               }];
-//  }
-//
-//  // Retry resolving
-//  if (_services[service.name]) {
-//    [service resolveWithTimeout:30.0];
-//  }
+    if (_hasListeners) {
+      [self sendEventWithName: @"serviceFound"
+                         body: [self serviceToJson:service]];
+    }
+  }
 }
 
 @end

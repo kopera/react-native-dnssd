@@ -33,7 +33,7 @@ export interface Service {
   readonly name: string;
   readonly type: string;
   readonly domain: string;
-  readonly hostName: string;
+  readonly hostName: string | null;
   readonly port: number;
   readonly txt: Record<string, string>;
 }
