@@ -34,7 +34,7 @@ repositories {
 dependencies {
     compile 'com.facebook.react:react-native:+'
 
-    compile 'com.github.andriydruk:rxdnssd:0.9.5'
-    compile 'com.github.andriydruk:dnssd:0.9.5'
-    compile 'io.reactivex:rxandroid:1.2.1'
+    compile 'de.mannodermaus.rxjava2:rxbonjour:2.0.0-RC1'
+    compile 'de.mannodermaus.rxjava2:rxbonjour-platform-android:2.0.0-RC1'
+    compile 'de.mannodermaus.rxjava2:rxbonjour-driver-jmdns:2.0.0-RC1'
 }

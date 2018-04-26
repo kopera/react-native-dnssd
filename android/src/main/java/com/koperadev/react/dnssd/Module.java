@@ -1,6 +1,7 @@
 
 package com.koperadev.react.dnssd;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.Map;
@@ -17,34 +18,32 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
-import com.github.druk.rxdnssd.BonjourService;
-import com.github.druk.rxdnssd.RxDnssd;
-// import com.github.druk.rxdnssd.RxDnssdBindable;
-import com.github.druk.rxdnssd.RxDnssdEmbedded;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.disposables.Disposables;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 
-import rx.Subscription;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.schedulers.Schedulers;
+import de.mannodermaus.rxbonjour.BonjourEvent;
+import de.mannodermaus.rxbonjour.BonjourService;
+import de.mannodermaus.rxbonjour.drivers.jmdns.JmDNSDriver;
+import de.mannodermaus.rxbonjour.platforms.android.AndroidPlatform;
+import de.mannodermaus.rxbonjour.RxBonjour;
 
 
 public class Module extends ReactContextBaseJavaModule {
-  private final ReactContext reactContext;
-  private final RxDnssd dnssd;
-  private final ArrayList<Subscription> searches;
+  private final RxBonjour dnssd;
+  private final ArrayList<Disposable> searches;
 
   public static final String TAG = "RNDNSSD";
 
   public Module(ReactApplicationContext reactContext) {
     super(reactContext);
 
-    this.reactContext = reactContext;
-    // if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN
-        // || (Build.VERSION.RELEASE.contains("4.4.2") && Build.MANUFACTURER.toLowerCase().contains("samsung"))) {
-    dnssd = new RxDnssdEmbedded();
-    // } else {
-      // dnssd = new RxDnssdBindable(reactContext);
-    // }
+    dnssd = new RxBonjour.Builder()
+      .platform(AndroidPlatform.create(reactContext))
+      .driver(JmDNSDriver.create())
+      .create();
     searches = new ArrayList<>();
   }
 
@@ -64,57 +63,64 @@ public class Module extends ReactContextBaseJavaModule {
     String serviceType = String.format("_%s._%s", type, protocol);
 
     Log.d(TAG, "Search starting for " + serviceType + " in domain: " + domain);
-    Subscription subscription = dnssd.browse(serviceType, domain)
-      .compose(dnssd.resolve())
-      .compose(dnssd.queryRecords())
+    Disposable search = dnssd.newDiscovery(serviceType)
       .subscribeOn(Schedulers.io())
       .observeOn(AndroidSchedulers.mainThread())
-      .debounce(15000, TimeUnit.MILLISECONDS)
-      .subscribe(new Action1<BonjourService>() {
-        @Override
-          public void call(BonjourService bonjourService) {
+      .subscribe(
+        new Consumer<BonjourEvent>() {
+          @Override
+          public void accept(BonjourEvent event) throws Exception {
+            BonjourService bonjourService = event.getService();
+            InetAddress host = bonjourService.getHost();
+
             WritableMap service = new WritableNativeMap();
-            service.putString("name", bonjourService.getServiceName());
-            service.putString("type", bonjourService.getRegType());
-            service.putString("domain", bonjourService.getDomain());
-            service.putString("hostName", bonjourService.getHostname());
+            service.putString("name", bonjourService.getName());
+            service.putString("type", bonjourService.getType());
+            service.putString("domain", "local.");
+            if (host != null) {
+              service.putString("hostName", host.getHostAddress());
+            } else {
+              service.putNull("hostName");
+            }
             service.putInt("port", bonjourService.getPort());
-      
+
             WritableMap txt = new WritableNativeMap();
             for (Map.Entry<String, String> entry : bonjourService.getTxtRecords().entrySet()) {
               txt.putString(entry.getKey(), entry.getValue());
             }
             service.putMap("txt", txt);
 
-            if (bonjourService.isLost()) {
-              Log.d(TAG, "Service Lost: " + bonjourService);
-              sendEvent("serviceLost", service);
-            } else {
+            if (event instanceof BonjourEvent.Added) {
               Log.d(TAG, "Service Found: " + bonjourService);
               sendEvent("serviceFound", service);
+            } else if (event instanceof BonjourEvent.Removed) {
+              Log.d(TAG, "Service Lost: " + bonjourService);
+              sendEvent("serviceLost", service);
             }
           }
-      }, new Action1<Throwable>() {
+        },
+        new Consumer<Throwable>() {
           @Override
-          public void call(Throwable throwable) {
-            Log.e(TAG, "error", throwable);
+          public void accept(Throwable e) throws Exception {
+            Log.e(TAG, "error", e);
           }
-      });
+        }
+      );
 
-      searches.add(subscription);
+      searches.add(search);
   }
 
   @ReactMethod
   public void stopSearch() {
     Log.d(TAG, "Stop all searches");
-    for (Subscription search: searches) {
-      search.unsubscribe();
+    for (Disposable search: searches) {
+      search.dispose();
     }
     searches.clear();
   }
 
   private void sendEvent(String eventName, @Nullable WritableMap params) {
-    reactContext
+    getReactApplicationContext()
         .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
         .emit(eventName, params);
   }
