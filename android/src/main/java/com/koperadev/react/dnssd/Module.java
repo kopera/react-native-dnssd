@@ -69,7 +69,7 @@ public class Module extends ReactContextBaseJavaModule {
       .compose(dnssd.queryRecords())
       .subscribeOn(Schedulers.io())
       .observeOn(AndroidSchedulers.mainThread())
-      .debounce(5000, TimeUnit.MILLISECONDS)
+      .debounce(15000, TimeUnit.MILLISECONDS)
       .subscribe(new Action1<BonjourService>() {
         @Override
           public void call(BonjourService bonjourService) {
