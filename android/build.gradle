@@ -36,5 +36,8 @@ dependencies {
 
     compile 'de.mannodermaus.rxjava2:rxbonjour:2.0.0-RC1'
     compile 'de.mannodermaus.rxjava2:rxbonjour-platform-android:2.0.0-RC1'
-    compile 'de.mannodermaus.rxjava2:rxbonjour-driver-jmdns:2.0.0-RC1'
+    compile ('de.mannodermaus.rxjava2:rxbonjour-driver-jmdns:2.0.0-RC1') {
+        exclude group: 'org.jmdns'
+    }
+    compile 'org.jmdns:jmdns:3.5.4'
 }
