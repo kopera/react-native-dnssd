@@ -22,6 +22,6 @@
     "url": "git://github.com/kopera/react-native-dnssd.git"
   },
   "peerDependencies": {
-    "react-native": "^0.41.2"
+    "react-native": ">= 0.41.2"
   }
 }
