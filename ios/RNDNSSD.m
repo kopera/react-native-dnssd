@@ -1,4 +1,5 @@
 #import "RNDNSSD.h"
+#include <arpa/inet.h>
 
 
 @interface RNDNSSD () <NSNetServiceBrowserDelegate, NSNetServiceDelegate>
@@ -75,16 +76,57 @@ RCT_EXPORT_METHOD(stopSearch)
 
 #pragma mark - Private methods
 
+// lifted from https://stackoverflow.com/questions/938521/iphone-bonjour-nsnetservice-ip-address-and-port/4976808#4976808
+-(NSArray* )IPAddressesFromData:(NSNetService *)service {
+  char addressBuffer[INET6_ADDRSTRLEN];
+  NSMutableArray *addresses = [[NSMutableArray alloc] init];
+  for (NSData *data in service.addresses)
+  {
+      memset(addressBuffer, 0, INET6_ADDRSTRLEN);
+
+      typedef union {
+          struct sockaddr sa;
+          struct sockaddr_in ipv4;
+          struct sockaddr_in6 ipv6;
+      } ip_socket_address;
+
+      ip_socket_address *socketAddress = (ip_socket_address *)[data bytes];
+
+      if (socketAddress && (socketAddress->sa.sa_family == AF_INET || socketAddress->sa.sa_family == AF_INET6))
+      {
+          const char *addressStr = inet_ntop(
+                                              socketAddress->sa.sa_family,
+                                              (socketAddress->sa.sa_family == AF_INET ? (void *)&(socketAddress->ipv4.sin_addr) : (void *)&(socketAddress->ipv6.sin6_addr)),
+                                              addressBuffer,
+                                              sizeof(addressBuffer));
+
+          int port = ntohs(socketAddress->sa.sa_family == AF_INET ? socketAddress->ipv4.sin_port : socketAddress->ipv6.sin6_port);
+
+          if (addressStr && port)
+          {
+              //NSLog(@"Found service at %s:%d", addressStr, port);
+              [addresses addObject:@{
+                  @"host": [NSString stringWithFormat:@"%s", addressStr],
+                  @"port": @(port)
+              }];
+          }
+      }
+  }
+
+  return addresses;
+}
+
 - (NSDictionary <NSString *, id> *) serviceToJson: (NSNetService *) service
 {
   return @{
-           @"name": service.name,
-           @"type": service.type,
-           @"domain": service.domain,
-           @"hostName": service.hostName,
-           @"port": @(service.port),
-           @"txt": [self serviceTXT:service],
-           };
+      @"name": service.name,
+      @"type": service.type,
+      @"domain": service.domain,
+      @"hostName": service.hostName,
+      @"port": @(service.port),
+      @"txt": [self serviceTXT:service],
+      @"addresses": [self IPAddressesFromData:service],
+  };
 }
 
 - (NSDictionary <NSString *, id> *) serviceTXT: (NSNetService *) service
