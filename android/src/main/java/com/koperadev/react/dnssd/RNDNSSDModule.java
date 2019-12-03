@@ -79,7 +79,7 @@ public class RNDNSSDModule extends ReactContextBaseJavaModule {
             service.putString("type", bonjourService.getType().replaceAll("\\.local\\.$", "."));
             service.putString("domain", "local.");
             if (host != null) {
-              service.putString("hostName", host.getHostName());
+              service.putString("hostName", host.getHostAddress());
             } else {
               service.putNull("hostName");
             }
