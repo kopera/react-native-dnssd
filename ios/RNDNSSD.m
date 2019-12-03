@@ -56,10 +56,10 @@ RCT_EXPORT_METHOD(startSearch:(NSString *)type protocol:(NSString *)protocol)
   if (!_browser) {
     _browser = [[NSNetServiceBrowser alloc] init];
     [_browser setDelegate:self];
-    
+
     _services = [[NSMutableDictionary alloc] init];
   }
-  
+
   [_browser searchForServicesOfType:[NSString stringWithFormat:@"_%@._%@.", type, protocol] inDomain:@"local."];
 }
 
@@ -80,8 +80,7 @@ RCT_EXPORT_METHOD(stopSearch)
 -(NSArray* )IPAddressesFromData:(NSNetService *)service {
   char addressBuffer[INET6_ADDRSTRLEN];
   NSMutableArray *addresses = [[NSMutableArray alloc] init];
-  for (NSData *data in service.addresses)
-  {
+  for (NSData *data in service.addresses) {
       memset(addressBuffer, 0, INET6_ADDRSTRLEN);
 
       typedef union {
@@ -92,23 +91,19 @@ RCT_EXPORT_METHOD(stopSearch)
 
       ip_socket_address *socketAddress = (ip_socket_address *)[data bytes];
 
-      if (socketAddress && (socketAddress->sa.sa_family == AF_INET || socketAddress->sa.sa_family == AF_INET6))
-      {
+      if (socketAddress && (socketAddress->sa.sa_family == AF_INET || socketAddress->sa.sa_family == AF_INET6)) {
           const char *addressStr = inet_ntop(
-                                              socketAddress->sa.sa_family,
-                                              (socketAddress->sa.sa_family == AF_INET ? (void *)&(socketAddress->ipv4.sin_addr) : (void *)&(socketAddress->ipv6.sin6_addr)),
-                                              addressBuffer,
-                                              sizeof(addressBuffer));
+                                            socketAddress->sa.sa_family,
+                                            (socketAddress->sa.sa_family == AF_INET ? (void *)&(socketAddress->ipv4.sin_addr) : (void *)&(socketAddress->ipv6.sin6_addr)),
+                                            addressBuffer,
+                                            sizeof(addressBuffer));
 
-          int port = ntohs(socketAddress->sa.sa_family == AF_INET ? socketAddress->ipv4.sin_port : socketAddress->ipv6.sin6_port);
+          //port is already known and android won't does not support different ports per ip
+          //int port = ntohs(socketAddress->sa.sa_family == AF_INET ? socketAddress->ipv4.sin_port : socketAddress->ipv6.sin6_port);
 
-          if (addressStr && port)
-          {
+          if (addressStr) {
               //NSLog(@"Found service at %s:%d", addressStr, port);
-              [addresses addObject:@{
-                  @"host": [NSString stringWithFormat:@"%s", addressStr],
-                  @"port": @(port)
-              }];
+              [addresses addObject:[NSString stringWithFormat:@"%s", addressStr]];
           }
       }
   }
@@ -138,7 +133,7 @@ RCT_EXPORT_METHOD(stopSearch)
                 initWithData:txtDict[key]
                 encoding:NSUTF8StringEncoding];
   }
-  
+
   return [NSDictionary dictionaryWithDictionary:txt];
 }
 
@@ -151,7 +146,7 @@ RCT_EXPORT_METHOD(stopSearch)
   if (service == nil) {
     return;
   }
-  
+
   _services[service.name] = service;
   service.delegate = self;
   [service resolveWithTimeout:0.0];
@@ -170,7 +165,7 @@ RCT_EXPORT_METHOD(stopSearch)
     NSNetService *service = _services[name];
     [_services removeObjectForKey:service.name];
     [service stop];
-    
+
     if (_hasListeners && service.hostName != nil) {
       [self sendEventWithName: @"serviceLost"
                          body: [self serviceToJson:service]];

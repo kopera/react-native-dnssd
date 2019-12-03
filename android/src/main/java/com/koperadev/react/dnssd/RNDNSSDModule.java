@@ -1,6 +1,8 @@
 
 package com.koperadev.react.dnssd;
 
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Map;
@@ -8,12 +10,15 @@ import javax.annotation.Nullable;
 
 import android.util.Log;
 
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
+import com.sun.org.apache.xpath.internal.Arg;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
@@ -74,7 +79,7 @@ public class RNDNSSDModule extends ReactContextBaseJavaModule {
             service.putString("type", bonjourService.getType().replaceAll("\\.local\\.$", "."));
             service.putString("domain", "local.");
             if (host != null) {
-              service.putString("hostName", host.getHostAddress());
+              service.putString("hostName", host.getHostName());
             } else {
               service.putNull("hostName");
             }
@@ -85,6 +90,18 @@ public class RNDNSSDModule extends ReactContextBaseJavaModule {
               txt.putString(entry.getKey(), entry.getValue());
             }
             service.putMap("txt", txt);
+
+            WritableArray addresses = Arguments.createArray();
+            Inet4Address ipv4Address = bonjourService.getV4Host();
+            if (ipv4Address != null) {
+              addresses.pushString(ipv4Address.getHostAddress());
+            }
+            Inet6Address ipv6Address = bonjourService.getV6Host();
+            if (ipv6Address != null) {
+              addresses.pushString(ipv6Address.getHostAddress());
+            }
+            service.putArray("addresses", addresses);
+
 
             if (event instanceof BonjourEvent.Added) {
               Log.d(TAG, "Service Found: " + bonjourService);
