@@ -98,7 +98,7 @@ RCT_EXPORT_METHOD(stopSearch)
                                             addressBuffer,
                                             sizeof(addressBuffer));
 
-          //port is already known and android won't does not support different ports per ip
+          //port is already known and android does not support different ports per ip
           //int port = ntohs(socketAddress->sa.sa_family == AF_INET ? socketAddress->ipv4.sin_port : socketAddress->ipv6.sin6_port);
 
           if (addressStr) {
