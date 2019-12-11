@@ -36,4 +36,5 @@ export interface Service {
   readonly hostName: string | null;
   readonly port: number;
   readonly txt: Record<string, string>;
+  readonly addresses: string[];
 }

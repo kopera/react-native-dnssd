@@ -1,11 +1,9 @@
 Pod::Spec.new do |s|
-  s.name         = "RNDnssd"
+  s.name         = "RNDNSSD"
   s.version      = "1.0.0"
   s.summary      = "React Native DNS SD"
-  s.description  = <<-DESC
-    React Native DNS SD
-  DESC
-  s.homepage     = ""
+  s.description  = "React Native DNS SD"
+  s.homepage     = "https://github.com/kopera/react-native-dnssd"
   s.license      = "MIT"
   s.author       = { "Ali Sabil" => "ali.sabil@gmail.com" }
   s.platform     = :ios, "7.0"
